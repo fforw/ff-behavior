@@ -1,0 +1,9 @@
+{
+    "plugins": [
+        "babel-plugin-espower"
+    ],
+    "presets": [
+        "es2015"
+    ]
+}
+
