@@ -1,6 +1,6 @@
 const actions = {};
 
-const  MODULE_NAME_REGEXP = /^.\/(.*)\.js/;
+const  MODULE_NAME_REGEXP = /^.\/(.*)\.js$/;
 
 const ActionService = {
     registerFromRequireContext: function (ctx)
@@ -17,8 +17,11 @@ const ActionService = {
                 throw new Error("Action module '" + moduleName + "' does not export a function");
             }
 
-            const actionName = moduleName.replace(MODULE_NAME_REGEXP, "$1");
-            ActionService.register(actionName, handler);
+            const m = MODULE_NAME_REGEXP.exec(moduleName);
+            if (m)
+            {
+                ActionService.register(m[1], handler);
+            }
         }
     },
 
