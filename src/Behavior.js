@@ -12,7 +12,7 @@ function initIds(node, id, nodeIdxByName)
         nodeIdxByName[node.id] = id;
     }
 
-    node.id = id;
+    node._id = id;
 
     let kids = node.kids;
     if (kids)
@@ -30,9 +30,9 @@ function initIds(node, id, nodeIdxByName)
 function initNodeMemory(array, node)
 {
     let handler = ActionService.lookup(node.name);
-    if (handler && handler.length > 1)
-    {
 
+    if (handler && handler.update.length > 2)
+    {
         let mem = {};
         for (let name in node)
         {
@@ -42,7 +42,7 @@ function initNodeMemory(array, node)
             }
         }
 
-        array[node.id] = mem;
+        array[node._id] = mem;
     }
 
     let kids = node.kids;
@@ -57,7 +57,7 @@ function initNodeMemory(array, node)
 }
 
 
-function updateNodes(node, instance)
+function updateNodes(node, ctx, instance)
 {
     let nodeName = node.name;
 
@@ -72,7 +72,7 @@ function updateNodes(node, instance)
             {
                 for (let i = 0; i < kids.length; i++)
                 {
-                    let state = updateNodes(kids[i], instance);
+                    let state = updateNodes(kids[i], ctx, instance);
                     if (state !== State.SUCCESS)
                     {
                         result = state;
@@ -87,7 +87,7 @@ function updateNodes(node, instance)
             {
                 for (let i = 0; i < kids.length; i++)
                 {
-                    let state = updateNodes(kids[i], instance);
+                    let state = updateNodes(kids[i], ctx, instance);
                     if (state !== State.FAILURE)
                     {
                         result = state;
@@ -103,15 +103,34 @@ function updateNodes(node, instance)
                 throw new Error("Invalid action: " + nodeName);
             }
 
-            result = handler(instance.globalMemory, instance.nodeMemory[node.id]);
+            if (instance.runningNode !== node && handler.init)
+            {
+                handler.init(ctx, instance.globalMemory, instance.nodeMemory[node._id])
+            }
+
+            result = handler.update(ctx, instance.globalMemory, instance.nodeMemory[node._id]);
 
             if (typeof result === "boolean")
             {
                 result = result ? State.SUCCESS : State.FAILURE;
             }
+
+            if (result === State.RUNNING)
+            {
+                instance.runningNode = node;
+            }
+            else if (
+                result !== State.SUCCESS &&
+                result !== State.FAILURE
+            )
+            {
+                throw new Error("Invalid leaf handler return value: " + result);
+            }
+
+            break;
     }
 
-    //console.log("Update", nodeName, " => ", result);
+    //console.log("Update", nodeName, " (", node.id, ") => ", result);
 
     return result;
 }
@@ -134,9 +153,9 @@ Behavior.prototype.createInstance = function(globalMemory)
     return new BehaviorInstance(this, globalMemory);
 };
 
-Behavior.prototype.update = function(instance)
+Behavior.prototype.update = function(ctx, instance)
 {
-    return updateNodes(this.rootNode, instance);
+    return updateNodes(this.rootNode, ctx, instance);
 };
 
 /**
@@ -152,12 +171,18 @@ function BehaviorInstance(behaviour, globalMemory)
     this.behaviour = behaviour;
     this.globalMemory = globalMemory || {};
     this.nodeMemory = initNodeMemory(new Array(behaviour.count), behaviour.rootNode);
+    this.runningNode = null;
 }
 
 
 BehaviorInstance.prototype.getNodeMemory = function (nodeName)
 {
     return this.nodeMemory[this.behaviour.nodeIdxByName[nodeName]];
+};
+
+BehaviorInstance.prototype.getMemory = function()
+{
+    return this.globalMemory;
 };
 
 

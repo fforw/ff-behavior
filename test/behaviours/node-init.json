@@ -1,0 +1,23 @@
+{
+    "root" : {
+        "name" : "Selector",
+        "kids" : [
+            {
+                "id" : "outer",
+                "name" : "Do",
+                "value" : 1
+            },
+            {
+                "name" : "Sequence",
+                "kids" : [
+                    {
+                        "id" : "inner",
+                        "name" : "Do",
+                        "value" : 2
+                    }
+                ]
+            }
+        ]
+    }
+}
+

@@ -1,6 +1,11 @@
-const actions = {};
-
 const  MODULE_NAME_REGEXP = /^.\/(.*)\.js$/;
+
+const RESERVED_ACTION_NAMES = {
+    'Selector' : true,
+    'Sequence' : true
+};
+
+let actions = {};
 
 const ActionService = {
     registerFromRequireContext: function (ctx)
@@ -12,21 +17,33 @@ const ActionService = {
             const moduleName = modules[i];
             let handler = ctx(moduleName);
 
-            if (typeof handler !== "function")
-            {
-                throw new Error("Action module '" + moduleName + "' does not export a function");
-            }
-
             const m = MODULE_NAME_REGEXP.exec(moduleName);
             if (m)
             {
-                ActionService.register(m[1], handler);
+                const actionName = m[1];
+                if (RESERVED_ACTION_NAMES.hasOwnProperty(actionName))
+                {
+                    throw new Error("'" + actionName + "' is a reserved name. You need to rename " + moduleName);
+                }
+                ActionService.register(actionName, handler);
             }
         }
     },
 
     register: function (actionName, handler)
     {
+        if (typeof handler === "function")
+        {
+            handler = {
+                update: handler
+            };
+        }
+
+        if (typeof handler !== "object" || typeof handler.update !== "function")
+        {
+            throw new Error("Invalid leaf handler", handler);
+        }
+
         //console.log("Register" , actionName , "to", handler);
         actions[actionName] = handler;
     },
@@ -38,6 +55,11 @@ const ActionService = {
         //console.log("Lookup", actionName , "=>", handler);
 
         return handler;
+    },
+
+    reset: function()
+    {
+        actions = {};
     }
 
 };
