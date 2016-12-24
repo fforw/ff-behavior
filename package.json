@@ -1,6 +1,6 @@
 {
   "name": "ff-behavior",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "main": "src/Behavior.js",
   "license": "Apache-2.0",
   "scripts": {
