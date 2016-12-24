@@ -1,0 +1,16 @@
+{
+    "root" : {
+        "name" : "Selector",
+        "kids" : [
+            {
+                "name" : "Compare",
+                "count" : 0
+            },
+            {
+                "id" : "second",
+                "name" : "Compare",
+                "count" : 1
+            }
+        ]
+    }
+}

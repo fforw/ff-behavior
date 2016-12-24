@@ -1,0 +1,16 @@
+{
+    "root" : {
+        "name" : "Sequence",
+        "kids" : [
+            {
+                "name" : "Check"
+            },
+            {
+                "name" : "Do"
+            },
+            {
+                "name" : "Wait"
+            }
+        ]
+    }
+}

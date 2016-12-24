@@ -1,0 +1,18 @@
+{
+    "root" : {
+        "name" : "Sequence",
+        "kids" : [
+            {
+                "id" : "myNode",
+                "name" : "Compare",
+                "count" : 12
+            },
+            {
+                "id" : "myNode2",
+                "name" : "Compare",
+                "count" : 11
+            }
+        ]
+    }
+}
+
