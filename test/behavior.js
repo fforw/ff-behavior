@@ -155,4 +155,173 @@ describe("Behavior", function(){
                 );
             })
         };
+
+        ActionService.register("Do", doAction);
+
+        const b = new Behavior(require("./behaviours/node-init.json"));
+
+        const instance = b.createInstance({
+            value: 2
+        });
+
+        let result = b.update(CONTEXT, instance);
+
+        assert(result == State.RUNNING);
+        assert(doAction.init.callCount === 2);
+        assert(doAction.init.getCall(0).args[2].value === 1);
+        assert(doAction.init.getCall(1).args[2].value === 2);
+        assert(doAction.update.callCount === 2);
+
+        doAction.init.reset();
+        doAction.update.reset();
+
+        instance.getMemory().value = 1;
+
+        result = b.update(CONTEXT, instance);
+
+        assert(result == State.RUNNING);
+
+        // .init must be called even if we go from RUNNING on one node directly to RUNNING on another
+        assert(doAction.init.callCount === 1);
+        assert(doAction.init.getCall(0).args[2].value === 1);
+        assert(doAction.update.callCount === 1);
+
+    });
+
+    it("Inverter inverts", function ()
+    {
+        ActionService.register("Check", function (ctx, tree)
+        {
+            return tree.value === 0 ? State.SUCCESS :
+                tree.value < 0 ? State.RUNNING : State.FAILURE;
+        });
+
+        const b = new Behavior(require("./behaviours/inverter.json"));
+
+        const instance = b.createInstance({
+            value: 1
+        });
+
+        assert(b.update(CONTEXT, instance) == State.SUCCESS);
+
+        instance.getMemory().value = 0;
+
+        assert(b.update(CONTEXT, instance) == State.FAILURE);
+
+        // not inverted
+        instance.getMemory().value = -1;
+        assert(b.update(CONTEXT, instance) == State.RUNNING);
+    });
+
+    it("Succeeder always succeeds", function ()
+    {
+        ActionService.register("Check", function (ctx, tree)
+        {
+            return tree.value === 0 ? State.SUCCESS :
+                tree.value < 0 ? State.RUNNING : State.FAILURE;
+        });
+
+        const b = new Behavior(require("./behaviours/succeeder.json"));
+
+        const instance = b.createInstance({
+            value: 1
+        });
+
+        assert(b.update(CONTEXT, instance) == State.SUCCESS);
+
+        instance.getMemory().value = 0;
+
+        assert(b.update(CONTEXT, instance) == State.SUCCESS);
+
+        // not changed
+        instance.getMemory().value = -1;
+        assert(b.update(CONTEXT, instance) == State.RUNNING);
+    });
+
+    it("Failer always fails", function ()
+    {
+        ActionService.register("Check", function (ctx, tree)
+        {
+            return tree.value === 0 ? State.SUCCESS :
+                tree.value < 0 ? State.RUNNING : State.FAILURE;
+        });
+
+        const b = new Behavior(require("./behaviours/failer.json"));
+
+        const instance = b.createInstance({
+            value: 1
+        });
+
+        assert(b.update(CONTEXT, instance) == State.FAILURE);
+
+        instance.getMemory().value = 0;
+
+        assert(b.update(CONTEXT, instance) == State.FAILURE);
+
+        // not changed
+        instance.getMemory().value = -1;
+        assert(b.update(CONTEXT, instance) == State.RUNNING);
+    });
+
+    it("RepeatUntilSuccess works", function ()
+    {
+        let thriceAction = {
+
+            init: function (ctx, tree, node)
+            {
+                node.count = 0;
+            },
+            update: sinon.spy(function (ctx, tree, node)
+            {
+                if (node.count === 3)
+                {
+                    return node.result;
+                }
+                node.count++;
+                return State.RUNNING;
+            })
+        };
+        ActionService.register("Thrice", thriceAction);
+
+        const b = new Behavior(require("./behaviours/repeat-until-success.json"));
+
+        const instance = b.createInstance();
+
+        assert(b.update(CONTEXT, instance) == State.SUCCESS);
+
+        assert(thriceAction.update.callCount === 4);
+
+    });
+
+    it("RepeatUntilFailure works", function ()
+    {
+        let thriceAction = {
+
+            init: function (ctx, tree, node)
+            {
+                node.count = 0;
+            },
+            update: sinon.spy(function (ctx, tree, node)
+            {
+                if (node.count === 3)
+                {
+                    return node.result;
+                }
+                node.count++;
+                return State.RUNNING;
+            })
+        };
+        ActionService.register("Thrice", thriceAction);
+
+        const b = new Behavior(require("./behaviours/repeat-until-failure.json"));
+
+        const instance = b.createInstance();
+
+        assert(b.update(CONTEXT, instance) == State.SUCCESS);
+
+        assert(thriceAction.update.callCount === 4);
+
+    });
+
+
 });

@@ -96,6 +96,73 @@ function updateNodes(node, ctx, instance)
                 }
             }
             break;
+        case "Inverter":
+            if (kids && kids.length)
+            {
+                const kidState = updateNodes(kids[0], ctx, instance);
+
+                if (kidState === State.SUCCESS)
+                {
+                    result = State.FAILURE;
+                }
+                else if (kidState === State.FAILURE)
+                {
+                    result = State.SUCCESS;
+                }
+                else
+                {
+                    result = kidState;
+                }
+            }
+            break;
+        case "Succeeder":
+            if (kids && kids.length)
+            {
+                const kidState = updateNodes(kids[0], ctx, instance);
+
+                result = kidState !== State.RUNNING ? State.SUCCESS : State.RUNNING;
+            }
+            else
+            {
+                result = State.SUCCESS;
+            }
+            break;
+        case "Failer":
+            if (kids && kids.length)
+            {
+                const kidState = updateNodes(kids[0], ctx, instance);
+
+                result = kidState !== State.RUNNING ? State.FAILURE : State.RUNNING;
+            }
+            else
+            {
+                result = State.FAILURE;
+            }
+            break;
+        case "RepeatUntilSuccess":
+            if (kids && kids.length)
+            {
+                let state;
+                do
+                {
+                    state = updateNodes(kids[0], ctx, instance);
+                } while( state !== State.SUCCESS );
+
+                result = State.SUCCESS;
+            }
+            break;
+        case "RepeatUntilFailure":
+            if (kids && kids.length)
+            {
+                let state;
+                do
+                {
+                    state = updateNodes(kids[0], ctx, instance);
+                } while( state !== State.FAILURE );
+
+                result = State.SUCCESS;
+            }
+            break;
         default:
             let handler = ActionService.lookup(nodeName);
             if (!handler)
@@ -130,7 +197,7 @@ function updateNodes(node, ctx, instance)
             break;
     }
 
-    //console.log("Update", nodeName, " (", node.id, ") => ", result);
+    //console.log("Update", nodeName, " ( id = ", node.id || node._id, ") => ", result);
 
     return result;
 }

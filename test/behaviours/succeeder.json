@@ -1,0 +1,11 @@
+{
+    "root": {
+        "name": "Succeeder",
+        "kids": [
+            {
+                "name": "Check"
+            }
+        ]
+    }
+}
+

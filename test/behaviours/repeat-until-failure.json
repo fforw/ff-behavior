@@ -1,0 +1,12 @@
+{
+    "root": {
+        "name": "RepeatUntilFailure",
+        "kids": [
+            {
+                "name": "Thrice",
+                "result" : "FAILURE"
+            }
+        ]
+    }
+}
+

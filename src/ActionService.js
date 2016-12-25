@@ -1,8 +1,13 @@
 const  MODULE_NAME_REGEXP = /^.\/(.*)\.js$/;
 
 const RESERVED_ACTION_NAMES = {
-    'Selector' : true,
-    'Sequence' : true
+    "Selector": true,
+    "Sequence": true,
+    "Inverter": true,
+    "Succeeder": true,
+    "Failer": true,
+    "RepeatUntilSuccess": true,
+    "RepeatUntilFailure": true
 };
 
 let actions = {};
