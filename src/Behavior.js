@@ -1,6 +1,26 @@
 const ActionService = require("./ActionService");
 const State = require("./state");
 
+const INTERNAL_PROPS = {
+    // user node id ( string)
+    id: true,
+    // internal node id ( number)
+    _id: true,
+    // node name
+    name: true,
+    // kids array
+    kids: true
+};
+
+/**
+ * Recursively provide behavior tree data with a node id.
+ *
+ * @param node              node
+ * @param id                {Number} numeric id for the node
+ * @param nodeIdxByName     {Object} node-by-name lookup
+ *
+ * @returns next numeric id
+ */
 function initIds(node, id, nodeIdxByName)
 {
     if (node.id)
@@ -26,7 +46,14 @@ function initIds(node, id, nodeIdxByName)
     return id;
 }
 
-
+/**
+ * Creates a node memory object for every node whose update method takes more than 2 args.
+ *
+ * @param array     {Array} node memory array
+ * @param node      {Object} node
+ *
+ * @returns {Array} node memory array
+ */
 function initNodeMemory(array, node)
 {
     let handler = ActionService.lookup(node.name);
@@ -36,7 +63,7 @@ function initNodeMemory(array, node)
         let mem = {};
         for (let name in node)
         {
-            if (node.hasOwnProperty(name) && name !== "name" && name !== "kids" && name !== "id")
+            if (node.hasOwnProperty(name) && !INTERNAL_PROPS[name])
             {
                 mem[name] = node[name];
             }
@@ -56,7 +83,14 @@ function initNodeMemory(array, node)
     return array;
 }
 
-
+/**
+ * Runs the recursive behavior tree update.
+ *
+ * @param node          node
+ * @param ctx           user context object
+ * @param instance      behavior tree instance
+ * @returns {State}
+ */
 function updateNodes(node, ctx, instance)
 {
     let nodeName = node.name;
@@ -215,11 +249,26 @@ function Behavior(data)
     this.count = initIds(data.root, 0, this.nodeIdxByName)
 }
 
+/**
+ * Creates a new instance for the current behavior tree.
+ *
+ * @param globalMemory          {?Object} global memory
+ *
+ * @returns {BehaviorInstance} new instance
+ */
 Behavior.prototype.createInstance = function(globalMemory)
 {
     return new BehaviorInstance(this, globalMemory);
 };
 
+/**
+ * Updates the given behavior tree instance
+ *
+ * @param ctx           {*} user context object
+ * @param instance      {BehaviorInstance} behavior tree instance
+ *
+ * @returns {State} bubbled up evaluation result
+ */
 Behavior.prototype.update = function(ctx, instance)
 {
     return updateNodes(this.rootNode, ctx, instance);
@@ -241,18 +290,27 @@ function BehaviorInstance(behaviour, globalMemory)
     this.runningNode = null;
 }
 
-
-BehaviorInstance.prototype.getNodeMemory = function (nodeName)
+/**
+ * Access the node memory of the node with the given user id.
+ *
+ * @param nodeId    {String} user node id
+ *
+ * @returns {Object} node memory
+ */
+BehaviorInstance.prototype.getNodeMemory = function (nodeId)
 {
-    return this.nodeMemory[this.behaviour.nodeIdxByName[nodeName]];
+    return this.nodeMemory[this.behaviour.nodeIdxByName[nodeId]];
 };
 
+/**
+ * Returns the main memory for the behavior tree instance.
+ *
+ * @returns {Object} global instance memory
+ */
 BehaviorInstance.prototype.getMemory = function()
 {
     return this.globalMemory;
 };
-
-
 
 module.exports = Behavior;
 
