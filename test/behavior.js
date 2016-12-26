@@ -1,7 +1,5 @@
-
 const assert = require("power-assert");
 const sinon = require("sinon");
-const proxyquire = require("proxyquire");
 
 const State = require("../src/state");
 
