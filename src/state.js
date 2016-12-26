@@ -1,7 +1,5 @@
-const Enum = require("./util/enum");
-
-module.exports = new Enum({
-    SUCCESS: 1,
-    FAILURE: 1,
-    RUNNING: 1
-});
+module.exports = {
+    SUCCESS: "SUCCESS",
+    FAILURE: "FAILURE",
+    RUNNING: "RUNNING"
+};
