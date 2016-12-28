@@ -1,11 +1,11 @@
 {
   "name": "ff-behavior",
-  "version": "0.0.4",
+  "version": "0.0.7",
   "main": "dist/Behavior.js",
+  "files": ["dist"],
   "license": "Apache-2.0",
   "scripts": {
     "build": "babel src -d dist",
-    "preinstall": "node ./util/npm-killer.js",
     "test": "mocha --compilers js:babel-register -R spec test/",
     "prepublish": "npm run build"
   },
