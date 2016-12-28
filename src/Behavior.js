@@ -312,5 +312,7 @@ BehaviorInstance.prototype.getMemory = function()
     return this.globalMemory;
 };
 
+Behavior.State = State;
+
 module.exports = Behavior;
 
