@@ -1,6 +1,8 @@
-const ActionService = require("./ActionService");
 const State = require("./state");
 
+/*
+ * Data-tree properties used for internal purposes.
+ */
 const INTERNAL_PROPS = {
     // user node id ( string)
     id: true,
@@ -11,6 +13,21 @@ const INTERNAL_PROPS = {
     // kids array
     kids: true
 };
+
+const  MODULE_NAME_REGEXP = /^.\/(.*)\.js$/;
+
+const RESERVED_ACTION_NAMES = {
+    "Selector": true,
+    "Sequence": true,
+
+    "Inverter": true,
+    "Succeeder": true,
+    "Failer": true,
+    "RepeatUntilSuccess": true,
+    "RepeatUntilFailure": true
+};
+
+let actions = {};
 
 /**
  * Recursively provide behavior tree data with a node id.
@@ -56,7 +73,7 @@ function initIds(node, id, nodeIdxByName)
  */
 function initNodeMemory(array, node)
 {
-    let handler = ActionService.lookup(node.name);
+    let handler = actions[node.name];
 
     if (handler && handler.update.length > 2)
     {
@@ -198,7 +215,7 @@ function updateNodes(node, ctx, instance)
             }
             break;
         default:
-            let handler = ActionService.lookup(nodeName);
+            let handler = actions[nodeName];
             if (!handler)
             {
                 throw new Error("Invalid action: " + nodeName);
@@ -312,7 +329,69 @@ BehaviorInstance.prototype.getMemory = function()
     return this.globalMemory;
 };
 
-Behavior.State = State;
+module.exports = {
 
-module.exports = Behavior;
+    /**
+     * Load the behavior tree from the given data representation / JSON.
+     *
+     * @param data      JSON data
+     *
+     * @returns {Behavior}
+     */
+    load: function(data)
+    {
+        return new Behavior(data);
+    },
 
+    Behavior: Behavior,
+    BehaviorInstance: BehaviorInstance,
+    State: State,
+
+    registerFromRequireContext: function (ctx)
+    {
+        const modules = ctx.keys();
+
+        for (let i = 0; i < modules.length; i++)
+        {
+            const moduleName = modules[i];
+            let handler = ctx(moduleName);
+
+            const m = MODULE_NAME_REGEXP.exec(moduleName);
+            if (m)
+            {
+                const actionName = m[1];
+                if (RESERVED_ACTION_NAMES.hasOwnProperty(actionName))
+                {
+                    throw new Error("'" + actionName + "' is a reserved name. You need to rename " + moduleName);
+                }
+
+
+                this.registerAction(actionName, handler);
+            }
+        }
+    },
+
+    registerAction: function (actionName, handler)
+    {
+        if (typeof handler === "function")
+        {
+            handler = {
+                update: handler
+            };
+        }
+
+        if (typeof handler !== "object" || typeof handler.update !== "function")
+        {
+            throw new Error("Invalid leaf handler", handler);
+        }
+
+        //console.log("Register" , actionName , "to", handler);
+        actions[actionName] = handler;
+    },
+
+    resetActions: function()
+    {
+        actions = {};
+    }
+
+};

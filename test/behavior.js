@@ -3,15 +3,13 @@ const sinon = require("sinon");
 
 const State = require("../src/state");
 
-const ActionService = require("../src/ActionService");
-
 const Behavior = require("../src/Behavior");
 
 const CONTEXT = {};
 
 describe("Behavior", function(){
 
-    beforeEach(ActionService.reset);
+    beforeEach(Behavior.resetActions);
 
 	it("supports sequences", function()
 	{
@@ -38,15 +36,15 @@ describe("Behavior", function(){
 
         let initSpy = sinon.spy();
 
-        ActionService.register("Wait", waitSpy);
+        Behavior.registerAction("Wait", waitSpy);
 
-        ActionService.register("Do", {
+        Behavior.registerAction("Do", {
             init: initSpy,
             update: doSpy
         });
-        ActionService.register("Check", checkSpy);
+        Behavior.registerAction("Check", checkSpy);
 
-        const b = new Behavior(require("./behaviours/sequence.json"));
+        const b = Behavior.load(require("./behaviours/sequence.json"));
 
         let instance = b.createInstance({
             count: 0
@@ -90,9 +88,9 @@ describe("Behavior", function(){
             return node.count === tree.count;
         });
 
-        ActionService.register("Compare", compareSpy);
+        Behavior.registerAction("Compare", compareSpy);
 
-        const b = new Behavior(require("./behaviours/selector.json"));
+        const b = Behavior.load(require("./behaviours/selector.json"));
 
         let instance = b.createInstance({
             count: 0
@@ -117,9 +115,9 @@ describe("Behavior", function(){
             return node.count === tree.count;
         });
 
-        ActionService.register("Compare", compareSpy);
+        Behavior.registerAction("Compare", compareSpy);
 
-        const b = new Behavior(require("./behaviours/node-memory.json"));
+        const b = Behavior.load(require("./behaviours/node-memory.json"));
 
         let instance = b.createInstance({
             count: 12
@@ -154,9 +152,9 @@ describe("Behavior", function(){
             })
         };
 
-        ActionService.register("Do", doAction);
+        Behavior.registerAction("Do", doAction);
 
-        const b = new Behavior(require("./behaviours/node-init.json"));
+        const b = Behavior.load(require("./behaviours/node-init.json"));
 
         const instance = b.createInstance({
             value: 2
@@ -188,13 +186,13 @@ describe("Behavior", function(){
 
     it("Inverter inverts", function ()
     {
-        ActionService.register("Check", function (ctx, tree)
+        Behavior.registerAction("Check", function (ctx, tree)
         {
             return tree.value === 0 ? State.SUCCESS :
                 tree.value < 0 ? State.RUNNING : State.FAILURE;
         });
 
-        const b = new Behavior(require("./behaviours/inverter.json"));
+        const b = Behavior.load(require("./behaviours/inverter.json"));
 
         const instance = b.createInstance({
             value: 1
@@ -213,13 +211,13 @@ describe("Behavior", function(){
 
     it("Succeeder always succeeds", function ()
     {
-        ActionService.register("Check", function (ctx, tree)
+        Behavior.registerAction("Check", function (ctx, tree)
         {
             return tree.value === 0 ? State.SUCCESS :
                 tree.value < 0 ? State.RUNNING : State.FAILURE;
         });
 
-        const b = new Behavior(require("./behaviours/succeeder.json"));
+        const b = Behavior.load(require("./behaviours/succeeder.json"));
 
         const instance = b.createInstance({
             value: 1
@@ -238,13 +236,13 @@ describe("Behavior", function(){
 
     it("Failer always fails", function ()
     {
-        ActionService.register("Check", function (ctx, tree)
+        Behavior.registerAction("Check", function (ctx, tree)
         {
             return tree.value === 0 ? State.SUCCESS :
                 tree.value < 0 ? State.RUNNING : State.FAILURE;
         });
 
-        const b = new Behavior(require("./behaviours/failer.json"));
+        const b = Behavior.load(require("./behaviours/failer.json"));
 
         const instance = b.createInstance({
             value: 1
@@ -279,9 +277,9 @@ describe("Behavior", function(){
                 return State.RUNNING;
             })
         };
-        ActionService.register("Thrice", thriceAction);
+        Behavior.registerAction("Thrice", thriceAction);
 
-        const b = new Behavior(require("./behaviours/repeat-until-success.json"));
+        const b = Behavior.load(require("./behaviours/repeat-until-success.json"));
 
         const instance = b.createInstance();
 
@@ -309,9 +307,9 @@ describe("Behavior", function(){
                 return State.RUNNING;
             })
         };
-        ActionService.register("Thrice", thriceAction);
+        Behavior.registerAction("Thrice", thriceAction);
 
-        const b = new Behavior(require("./behaviours/repeat-until-failure.json"));
+        const b = Behavior.load(require("./behaviours/repeat-until-failure.json"));
 
         const instance = b.createInstance();
 
